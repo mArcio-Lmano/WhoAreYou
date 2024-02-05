@@ -14,13 +14,13 @@ The web scraper component is responsible for collecting images of celebrities fr
 
 ```bash
 # Install required dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
-# Run the web scraper
-python web_scraper.py
+# Run the web scraper (Exemple)
+python3 web_scraper.py "Kevin Hart" 25
 ```
 ### 2. Image Classification Model
-
+<!-- 
 The image classification model is the core of the project, responsible for accurately classifying the scraped images. It employs state-of-the-art machine learning techniques, possibly leveraging pre-trained models, to achieve high accuracy in celebrity image classification.
 
 #### Setup and Usage
@@ -34,11 +34,11 @@ python train_model.py
 
 # Evaluate the model's performance
 python evaluate_model.py
-```
+``` -->
 
 ### 3. User Interface
 
-The user interface provides an intuitive way for users to interact with the Celebrities Classifier. Users can upload images, and the system will predict and display the celebrity present in the image.
+<!-- The user interface provides an intuitive way for users to interact with the Celebrities Classifier. Users can upload images, and the system will predict and display the celebrity present in the image.
 
 #### Setup and Usage
 
@@ -48,4 +48,4 @@ pip install -r requirements.txt
 
 # Run the user interface
 python user_interface.py
-```
+``` -->
