@@ -16,9 +16,12 @@ The web scraper component is responsible for collecting images of celebrities fr
 # Install required dependencies
 pip3 install -r requirements.txt
 
-# Run the web scraper (Exemple)
+# Run the web scraper. For example
 python3 web_scraper.py "Kevin Hart" 25
 ```
+Replace "Kevin Hart" with the name of the celebrity you want to scrape images for, and 25 with the desired number of images.
+
+**Check for any errors or exceptions during execution**
 ### 2. Image Classification Model
 <!-- 
 The image classification model is the core of the project, responsible for accurately classifying the scraped images. It employs state-of-the-art machine learning techniques, possibly leveraging pre-trained models, to achieve high accuracy in celebrity image classification.
