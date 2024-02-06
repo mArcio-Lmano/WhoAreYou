@@ -16,10 +16,10 @@ The web scraper component is responsible for collecting images of celebrities fr
 # Install required dependencies
 pip3 install -r requirements.txt
 
-# Run the web scraper. For example
-python3 web_scraper.py "Kevin Hart" 25
+# Run the web scraper. 
+python3 web_scraper.py <celebrity_name> <num_images> [--verbose]
 ```
-Replace "Kevin Hart" with the name of the celebrity you want to scrape images for, and 25 with the desired number of images.
+The use of the `--verbose` flag is not recommended except for debugging purposes.
 
 **Check for any errors or exceptions during execution**
 ### 2. Image Classification Model
