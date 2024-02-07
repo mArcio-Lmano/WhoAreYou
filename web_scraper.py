@@ -1,13 +1,37 @@
 from bs4 import BeautifulSoup
 from PIL import Image
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+import numpy as np
+import cv2
 import requests
 import os
 import sys
-import io
+import json
+
+# Read headers from the JSON file
 
 
+
+
+
+def count_faces_from_bytes(image_bytes):
+    # Convert bytes to numpy array
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    
+    # Decode image
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # Convert to grayscale for face detection
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Load pre-trained face detection model
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    
+    # Detect faces in the image
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    
+    # Return the number of detected faces
+    return len(faces), faces, image
 
 
 
@@ -20,8 +44,9 @@ def getImages(celeb, n_images, verbose, img_path):
     - celeb: The name of the celebrity.
     - n_images: The number of images to download.
     """
+    with open("headers.json", "r") as f:
+        headers = json.load(f)
     imgs_url = f"https://www.gettyimages.pt/fotos/42?family=editorial&assettype=image&phrase={celeb}&sort=mostpopular&page="
-    headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0"}
     page_number = 1
     counter = 0
     
@@ -34,20 +59,35 @@ def getImages(celeb, n_images, verbose, img_path):
             if counter >= n_images:
                 return counter # Break the function if the desired number of images is reached
             try: 
+                        
                 img_url = img_tag.get('src')
-                
-                img_name = os.path.join(img_path, f"{celeb}_{counter}.jpg")
                 img_bits = requests.get(img_url).content
-                if verbose:
-                    img_pixels = io.BytesIO(img_bits)
-                    image = Image.open(img_pixels)
-                    plt.imshow(image)
-                    plt.axis('off')  
-                    plt.show()
-                with open(img_name, 'wb') as img_file:
-                    img_file.write(img_bits)
-                counter += 1
                 
+                coun_faces_falg, faces, image = count_faces_from_bytes(img_bits)
+                img_name = os.path.join(img_path, f"{celeb}_{counter}_{coun_faces_falg}.jpg")
+                
+                if coun_faces_falg == 1:
+                    print("Keeping image")
+                    with open(img_name, 'wb') as img_file:
+                        img_file.write(img_bits)
+                    counter += 1
+                else:
+                    print("Removing image")
+                    if verbose:
+                        for (x, y, w, h) in faces:
+                            cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                        
+                        # Display the image with rectangles
+                        cv2.imshow('Faces Detected', image)
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
+
+                        # img_pixels = io.BytesIO(img_bits)
+                        # image = Image.open(img_pixels)
+                        # plt.imshow(image)
+                        # plt.axis('off')  
+                        # plt.show()
+
             except Exception as e:
                 print(f"Failed to download image: {e}")
         
