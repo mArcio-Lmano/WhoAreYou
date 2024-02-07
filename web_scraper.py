@@ -8,12 +8,6 @@ import os
 import sys
 import json
 
-# Read headers from the JSON file
-
-
-
-
-
 def count_faces_from_bytes(image_bytes):
     # Convert bytes to numpy array
     nparr = np.frombuffer(image_bytes, np.uint8)
@@ -32,9 +26,6 @@ def count_faces_from_bytes(image_bytes):
     
     # Return the number of detected faces
     return len(faces), faces, image
-
-
-
 
 def getImages(celeb, n_images, verbose, img_path):
     """
