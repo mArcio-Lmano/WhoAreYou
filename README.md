@@ -47,7 +47,10 @@ python3 web_scraper.py <celebrity_name> <num_images> [--verbose]
 ```
 The use of the `--verbose` flag is not recommended except for debugging purposes.
 
-**Check for any errors or exceptions during execution**
+The script already attempts to filter images containing more than one person using pre-trained models from OpenCV. However, it is important to note that no automated process is perfect, and manual review of the final images is essential to ensure the model's effectiveness.
+
+**Please be vigilant and check for any errors or exceptions that may occur during execution**
+
 ### 2. Image Classification Model
 <!-- 
 The image classification model is the core of the project, responsible for accurately classifying the scraped images. It employs state-of-the-art machine learning techniques, possibly leveraging pre-trained models, to achieve high accuracy in celebrity image classification.

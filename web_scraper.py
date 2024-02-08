@@ -54,16 +54,16 @@ def getImages(celeb, n_images, verbose, img_path):
                 img_url = img_tag.get('src')
                 img_bits = requests.get(img_url).content
                 
-                coun_faces_falg, faces, image = count_faces_from_bytes(img_bits)
-                img_name = os.path.join(img_path, f"{celeb}_{counter}_{coun_faces_falg}.jpg")
+                count_faces_falg, faces, image = count_faces_from_bytes(img_bits)
+                img_name = os.path.join(img_path, f"{celeb}_{counter}.jpg")
                 
-                if coun_faces_falg == 1:
+                if count_faces_falg == 1:
                     print("Keeping image")
                     with open(img_name, 'wb') as img_file:
                         img_file.write(img_bits)
                     counter += 1
                 else:
-                    print("Removing image")
+                    print(f"Removing image, Found {count_faces_falg} faces")
                     if verbose:
                         for (x, y, w, h) in faces:
                             cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
@@ -73,11 +73,6 @@ def getImages(celeb, n_images, verbose, img_path):
                         cv2.waitKey(0)
                         cv2.destroyAllWindows()
 
-                        # img_pixels = io.BytesIO(img_bits)
-                        # image = Image.open(img_pixels)
-                        # plt.imshow(image)
-                        # plt.axis('off')  
-                        # plt.show()
 
             except Exception as e:
                 print(f"Failed to download image: {e}")
