@@ -10,11 +10,11 @@ The Celebrities Classifier project is a three-part system designed to scrape ima
 
 The web scraper component is responsible for collecting images of celebrities from various online sources. It uses web scraping techniques to gather a diverse dataset for training and testing the model.
 
-#### 1. Setup and Usage
+#### Setup and Usage
 
 To use the web scraper component effectively, you need to provide a User-Agent header for HTTP requests. This helps mimic legitimate browser behavior and avoid being blocked by websites.
 
-#### Creating a User-Agent Header JSON File
+##### Creating a User-Agent Header JSON File
 
 Create a JSON file named `headers.json` and specify the User-Agent header value. An example is provided below:
 
@@ -24,7 +24,7 @@ Create a JSON file named `headers.json` and specify the User-Agent header value.
 }
 ```
 
-#### Obtaining Your User-Agent Header
+##### Obtaining Your User-Agent Header
 
 You can obtain your User-Agent header directly from your browser's developer tools. Here's how:
 
@@ -35,7 +35,7 @@ You can obtain your User-Agent header directly from your browser's developer too
 5. In the list of network requests, locate the first request (typically the webpage itself) and click on it.
 6. In the headers section of the request details, find the "User-Agent" header. This is your User-Agent string.
 
-You can copy your User-Agent string from the developer tools and use it directly when running the web scraper script. There's no need to create a separate `headers.json` file.
+You can copy your User-Agent string from the developer tools and use it directly when running the web scraper script or create a separate `headers.json` file.
 
 
 ```bash
