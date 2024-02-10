@@ -18,7 +18,7 @@ def process_images(celeb_dir, log=False):
 
         if os.path.basename(img_path) not in sorted(os.listdir(celeb_dir)): # Check if we are loking in the rigth directory
             print(f"Image {img_path} not found in directory. Checking Next")
-            return 
+            return 1
         
         img_index = sorted(os.listdir(celeb_dir)).index(os.path.basename(img_path)) # Retrive last saw image
         imgs = sorted(os.listdir(celeb_dir))[img_index + 1:] # Retrive the images that were not saw
@@ -31,7 +31,7 @@ def process_images(celeb_dir, log=False):
         img = cv2.imread(img_path) 
         
         cv2.imshow(img_path, img)
-        print(img_path) #### Debug (REMOVE) ####
+        print(2*"\t"+img_path) #### Debug (REMOVE) ####
             
         key = cv2.waitKey(0)  # Wait for a key press
         cv2.destroyAllWindows() # Close all images
@@ -42,9 +42,17 @@ def process_images(celeb_dir, log=False):
             with open(log_path, "w") as log_file:
                 log_file.write(img_path) # Save the last image seen in a log file for later use
             sys.exit(0)
+    
+    return 0
 
         
+def rename_images(celeb_dir):
+    celeb = os.path.basename(celeb_dir)
+    print(celeb)
+    return 1
+    
 def main():
+    status = 1
     log = "--log" in sys.argv # Check for "--log" flag
     print(log) #### Debug (REMOVE) ####
     path = "img"
@@ -55,13 +63,23 @@ def main():
     files = [f for f in os.listdir(path)]
     if files:
         print(f"Celebrities found: {len(files)}")
-        for filename in files:
-            print(f"\t{filename}")
-            process_images(os.path.join(path, filename), log)
+        for img_name in files:
+            print(f"\t{img_name}")
+            file_name = os.path.join(path, img_name)
+            status = process_images(file_name, log)
+            
+        if not status:
+            status = rename_images(os.path.join(path, file_name))
     else:
         print(f"No celebrities found in the folder {path}.")
         sys.exit(1)
+    return status
         
 if __name__ == "__main__":
-    main()
+    status = main()
+    if not status:
+        print("Script executed with no errors")
+    else:
+        print(f"Status Error {status}")
+        
     
