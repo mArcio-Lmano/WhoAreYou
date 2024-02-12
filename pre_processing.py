@@ -1,73 +1,208 @@
 import os
 import sys
 import cv2
+import shutil
+import numpy as np
+import matplotlib.pyplot as plt
 
-def process_images(celeb_dir, log=False):
+from time import sleep
+
+def processImages(celeb_dir, log=False):
+    """
+    Process images in a specified directory, optionally continuing from the last viewed image.
+
+    This function processes images located in the 'celeb_dir' directory. If the 'log' flag is set to True, 
+    it checks for a log file containing the path of the last viewed image. If found, it continues processing 
+    images from the next one. If the 'log' flag is False or if the log file is not found, it processes all images 
+    in the directory.
+
+    Args:
+        celeb_dir (str): The directory path where the images are located.
+        log (bool, optional): A flag indicating whether to continue processing from the last viewed image 
+                             (default is False).
+
+    Returns:
+        tuple: A tuple containing an exit status code (0 for success, 1 for failure) and the updated log status.
+
+    Raises:
+        FileNotFoundError: If the specified directory 'celeb_dir' does not exist.
+        IndexError: If the last viewed image in the log file is not found in the directory.
+    """
     log_path = "log.txt"
+    
+    # Check if the directory 'celeb_dir' exists
     if not os.path.exists(celeb_dir):
-        print(f"Directory does not exist.: {celeb_dir}")
-        sys.exit(1)
+        raise FileNotFoundError(f"Directory '{celeb_dir}' does not exist.")
         
     if log:
-        if not os.path.exists(log_path): # Check if log file is not the directory
-            print("Log file not found. Try executing without the log flag.")
-            sys.exit(1)
+        # Check if log file exists
+        if not os.path.exists(log_path):
+            raise FileNotFoundError(f"Log file not found {log_path}. Try executing without the log flag.")
             
         with open(log_path, "r") as log_file: # Open Log file
             img_path = log_file.read()
 
-        if os.path.basename(img_path) not in sorted(os.listdir(celeb_dir)): # Check if we are loking in the rigth directory
-            print(f"Image {img_path} not found in directory. Checking Next")
+        # Check if the last viewed image exists in the directory
+        if os.path.basename(img_path) not in sorted(os.listdir(celeb_dir)):
+            print(f"Image {img_path} from log file not found in directory. Checking Next")
             return 1, log
         
-        img_index = sorted(os.listdir(celeb_dir)).index(os.path.basename(img_path)) # Retrive last saw image
-        imgs = sorted(os.listdir(celeb_dir))[img_index + 1:] # Retrive the images that were not saw
+        # Retrieve the index of the last viewed image and get the subsequent images
+        img_index = sorted(os.listdir(celeb_dir)).index(os.path.basename(img_path))
+        imgs = sorted(os.listdir(celeb_dir))[img_index + 1:]
         log = False
             
-    else: # If no log file was used retrive all images
+    else: # If no log file was used, retrieve all images
         imgs = sorted(os.listdir(celeb_dir))
     
-    for f in imgs: # Iterate over the images
-        img_path = os.path.join(celeb_dir, f)
-        img = cv2.imread(img_path) 
-        
-        cv2.imshow(img_path, img)
-        print(2*"\t"+img_path) #### Debug (REMOVE) ####
-            
-        key = cv2.waitKey(0)  # Wait for a key press
-        cv2.destroyAllWindows() # Close all images
-            
-        if key == ord("x"): # "x" to delete
-            os.remove(img_path) # Delete image
-        elif key == ord("q"):  # "q" key to quit
-            with open(log_path, "w") as log_file:
-                log_file.write(img_path) # Save the last image seen in a log file for later use
-            sys.exit(0)
-    
+    # Process images using the delete_imgs function
+    deleteImgs(imgs=imgs, celeb_dir=celeb_dir, log_path=log_path)
+    # sleep(20)
     return 0, log
 
+
+def deleteImgs(imgs, celeb_dir, log_path):
+    """
+    Display images from a specified directory and allow the user to decide whether to delete them.
+
+    This function iterates through a list of image filenames provided in the 'imgs' parameter, 
+    displays each image using OpenCV, and waits for user input to determine whether to delete 
+    the image or proceed to the next one. The user can press 'x' to delete the image or 'q' to 
+    quit the process. If the user quits, the function saves the path of the last viewed image 
+    into a log file specified by 'log_path'.
+
+    Args:
+        imgs (list): A list of image filenames to be processed.
+        celeb_dir (str): The directory path where the images are located.
+        log_path (str): The file path for storing the log of the last viewed image.
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If the specified directory 'celeb_dir' does not exist.
+        ValueError: If 'imgs' is not a list or if any of the elements in 'imgs' is not a valid image filename.
+    """
+    # Check if the directory 'celeb_dir' exists
+    if not os.path.exists(celeb_dir):
+        raise FileNotFoundError(f"Directory '{celeb_dir}' does not exist.")
+    
+    # Iterate over the images
+    for f in imgs: 
+        # Construct the full path to the image file
+        img_path = os.path.join(celeb_dir, f)
         
-def rename_images(celeb_dir):
-    # num_imgs = len(os.listdir(celeb_dir))
-    # print(num_imgs)
+        # Read the image using OpenCV
+        img = cv2.imread(img_path) 
+        
+        # Display the image
+        cv2.imshow(img_path, img)
+        print(2 * "\t" + img_path)  # Debug
+        
+        # Wait for a key press
+        key = cv2.waitKey(0)
+        
+        # Close all displayed images
+        cv2.destroyAllWindows() 
+        
+        # If the user pressed "x", delete the image
+        if key == ord("x"): 
+            os.remove(img_path) 
+        # If the user pressed "q", save the path of the last viewed image into a log file and exit
+        elif key == ord("q"):  
+            with open(log_path, "w") as log_file:
+                log_file.write(img_path)
+            sys.exit(0)
+        # If any other key is pressed, proceed to the next image
+    
+def renameImages(celeb_dir):
+    """
+    Rename all images in the specified directory with a counter appended to the filename.
+
+    Args:
+        celeb_dir (str): The directory path containing the images to be renamed.
+
+    Returns:
+        int: Status code indicating success (0).
+    """
+    # Get a sorted list of files in the directory
     files = sorted(os.listdir(celeb_dir))
+    
+    # Initialize a counter
     counter = 0
+    
+    # Extract the basename of the directory as the celebrity name
     celeb = os.path.basename(celeb_dir)
+    
+    # Iterate over each file in the directory
     for file in files:
+        # Construct the old and new file paths
         old_name = os.path.join(celeb_dir, file)
-        
         new_file_name = celeb + f"_{counter}.jpg"
         new_name = os.path.join(celeb_dir, new_file_name)
         
+        # Increment the counter
         counter += 1
+        
+        # Rename the file
         os.rename(old_name, new_name)
-    return 0
     
+    # Return success status code
+    return 0
+
+def resizeAndNormalize(celeb_dir, verbose):
+    """
+    Resize images in the specified directory to 224x224 pixels and normalize pixel values to the range [0, 1].
+
+    Args:
+        celeb_dir (str): Path to the directory containing images.
+        verbose (bool): If True, display processed images using OpenCV imshow.
+
+    Returns:
+        None
+    """
+    # List all files in the directory
+    files = os.listdir(celeb_dir)
+    
+    # Process each image file
+    for file in files:
+        # Construct the full file path
+        file_path = os.path.join(celeb_dir, file)
+        
+        # Read the image using OpenCV
+        img = cv2.imread(file_path)
+        
+        # Resize the image to 224x224 pixels
+        img_resized = cv2.resize(src=img, dsize=[224, 224])
+        
+        # Normalize pixel values to the range [0, 1]
+        img_normalized = img_resized / 255
+        
+        # Save the normalized image
+        cv2.imwrite(file_path, img_normalized)
+
+        # If verbose mode is enabled, display the processed image
+        if verbose:
+            cv2.imshow("Processed Image", img)
+            key = cv2.waitKey(0)
+            cv2.destroyAllWindows() 
+        
+    
+
+
 def main():
     status = 1
     log = "--log" in sys.argv # Check for "--log" flag
-    print(log) #### Debug (REMOVE) ####
+    verbose = "--verbose" in sys.argv # Check for "--verbose" flag
+    bak = "--bak" in sys.argv
+    print(f"Log: {log}")
+    print(f"Verbose: {verbose}")
+    print(f"BAK: {bak}")
+    
     path = "img"
+    if bak:
+        shutil.copytree(path, path+"_BAK", copy_function=shutil.copy) # Create a backup folder
+    
     if not os.path.exists(path): # Check if there is an "img" folder
         print(f"Folder {path} not found")
         sys.exit(1)
@@ -78,19 +213,28 @@ def main():
         for img_name in files:
             print(f"\t{img_name}")
             file_name = os.path.join(path, img_name)
-            status, log = process_images(file_name, log)
+            # status, log = processImages(file_name, log)
+            status = 0 ## DEBUG REMOVE
             if not status:
-                status = rename_images(file_name)
+                status = renameImages(file_name)
+                resizeAndNormalize(file_name, verbose)
+                #### Preprocesessing
     else:
         print(f"No celebrities found in the folder {path}.")
         sys.exit(1)
+    
+    if not status and bak:
+        print("Backup not used.\nDELETING....")
+        # shutil.rmtree(path+"_BAK")
+        
     return status
         
 if __name__ == "__main__":
     status = main()
     if not status:
         print("Script executed with no errors")
-    else:
-        print(f"Status Error {status}")
+    elif status == 1:
+        raise IndexError(f"Image path from log file not found in any directory. Check log file")
+        # print(f"Status Error {status}")
         
     
