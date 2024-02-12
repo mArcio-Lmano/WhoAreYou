@@ -159,7 +159,7 @@ def renameImages(celeb_dir):
     return 0
 
 
-def resizeNormalizeAugment(celeb_dir, verbose):
+def resizeNormalizeAugment(celeb_dir):
     """
     Resize images in the specified directory to 224x224 pixels and normalize pixel values to the range [0, 1].
 
@@ -241,12 +241,10 @@ def main():
     # Initialize status and flags based on command-line arguments
     status = 1
     log = "--log" in sys.argv  # Check for "--log" flag
-    verbose = "--verbose" in sys.argv  # Check for "--verbose" flag
     bak = "--bak" in sys.argv
     
     # Flags used
     print(f"Log: {log}")
-    print(f"Verbose: {verbose}")
     print(f"BAK: {bak}")
 
     # Set up path for image processing
@@ -274,7 +272,7 @@ def main():
             status, log = processImages(file_name, log)
             if not status:
                 status = renameImages(file_name)
-                resizeNormalizeAugment(file_name, verbose)
+                resizeNormalizeAugment(file_name)
                 renameImages(file_name)
     else:
         # Handle case when no celebrities are found
