@@ -51,7 +51,34 @@ The script already attempts to filter images containing more than one person usi
 
 **Please be vigilant and check for any errors or exceptions that may occur during execution**
 
-### 2. Image Classification Model
+
+### 2. Image Processing
+
+#### Features
+
+1. **Image Processing Functions:**
+   - **Delete Images:** Allows users to view images in a directory and choose whether to delete them.
+   - **Rename Images:** Renames all images in a directory with a counter appended to the filename.
+   - **Resize and Normalize:** Resizes images to 224x224 pixels and normalizes pixel values to the range [0, 1].
+   - **Data Augmentation:** Applies data augmentation to images by rotating them at angles of 90, 180, and 270 degrees.
+
+2. **Backup Functionality:**
+   - Users can create a backup folder for the images before performing any processing tasks.
+
+### Usage
+
+####   Command-line Arguments
+
+- `--log`: Specifies whether to continue processing images from the last viewed image.
+- `--bak`: Creates a backup folder for the images before processing.
+
+### Running the Script
+
+```bash
+python image_processing_tool.py [--log] [--bak]
+```
+
+### 3. Image Classification Model
 <!-- 
 The image classification model is the core of the project, responsible for accurately classifying the scraped images. It employs state-of-the-art machine learning techniques, possibly leveraging pre-trained models, to achieve high accuracy in celebrity image classification.
 
@@ -68,7 +95,7 @@ python train_model.py
 python evaluate_model.py
 ``` -->
 
-### 3. User Interface
+### 4. User Interface
 
 <!-- The user interface provides an intuitive way for users to interact with the Celebrities Classifier. Users can upload images, and the system will predict and display the celebrity present in the image.
 
