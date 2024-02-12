@@ -18,10 +18,11 @@ def process_images(celeb_dir, log=False):
 
         if os.path.basename(img_path) not in sorted(os.listdir(celeb_dir)): # Check if we are loking in the rigth directory
             print(f"Image {img_path} not found in directory. Checking Next")
-            return 1
+            return 1, log
         
         img_index = sorted(os.listdir(celeb_dir)).index(os.path.basename(img_path)) # Retrive last saw image
         imgs = sorted(os.listdir(celeb_dir))[img_index + 1:] # Retrive the images that were not saw
+        log = False
             
     else: # If no log file was used retrive all images
         imgs = sorted(os.listdir(celeb_dir))
@@ -43,13 +44,24 @@ def process_images(celeb_dir, log=False):
                 log_file.write(img_path) # Save the last image seen in a log file for later use
             sys.exit(0)
     
-    return 0
+    return 0, log
 
         
 def rename_images(celeb_dir):
+    # num_imgs = len(os.listdir(celeb_dir))
+    # print(num_imgs)
+    files = sorted(os.listdir(celeb_dir))
+    counter = 0
     celeb = os.path.basename(celeb_dir)
-    print(celeb)
-    return 1
+    for file in files:
+        old_name = os.path.join(celeb_dir, file)
+        
+        new_file_name = celeb + f"_{counter}.jpg"
+        new_name = os.path.join(celeb_dir, new_file_name)
+        
+        counter += 1
+        os.rename(old_name, new_name)
+    return 0
     
 def main():
     status = 1
@@ -66,10 +78,9 @@ def main():
         for img_name in files:
             print(f"\t{img_name}")
             file_name = os.path.join(path, img_name)
-            status = process_images(file_name, log)
-            
-        if not status:
-            status = rename_images(os.path.join(path, file_name))
+            status, log = process_images(file_name, log)
+            if not status:
+                status = rename_images(file_name)
     else:
         print(f"No celebrities found in the folder {path}.")
         sys.exit(1)
