@@ -2,10 +2,17 @@ import os
 import sys
 import cv2
 import shutil
+import imutils 
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
+from keras.preprocessing.image import ImageDataGenerator
 
 from time import sleep
+
+
+# Set the WINEPREFIX environment variable
+os.environ["WINEPREFIX"] = "/home/talocha/.wine"
 
 def processImages(celeb_dir, log=False):
     """
@@ -115,6 +122,7 @@ def deleteImgs(imgs, celeb_dir, log_path):
             sys.exit(0)
         # If any other key is pressed, proceed to the next image
     
+
 def renameImages(celeb_dir):
     """
     Rename all images in the specified directory with a counter appended to the filename.
@@ -150,20 +158,20 @@ def renameImages(celeb_dir):
     # Return success status code
     return 0
 
-def resizeAndNormalize(celeb_dir, verbose):
+
+def resizeNormalizeAugment(celeb_dir, verbose):
     """
     Resize images in the specified directory to 224x224 pixels and normalize pixel values to the range [0, 1].
 
     Args:
         celeb_dir (str): Path to the directory containing images.
-        verbose (bool): If True, display processed images using OpenCV imshow.
 
     Returns:
         None
     """
     # List all files in the directory
     files = os.listdir(celeb_dir)
-    
+
     # Process each image file
     for file in files:
         # Construct the full file path
@@ -176,57 +184,117 @@ def resizeAndNormalize(celeb_dir, verbose):
         img_resized = cv2.resize(src=img, dsize=[224, 224])
         
         # Normalize pixel values to the range [0, 1]
-        img_normalized = img_resized / 255
+        img_normalized = cv2.normalize(img_resized, None, 0, 1.0, cv2.NORM_MINMAX)
+        
+        # Apply data augmentation
+        imgs_augmented = dataAugment(img_normalized)
         
         # Save the normalized image
-        cv2.imwrite(file_path, img_normalized)
-
-        # If verbose mode is enabled, display the processed image
-        if verbose:
-            cv2.imshow("Processed Image", img)
-            key = cv2.waitKey(0)
-            cv2.destroyAllWindows() 
+        original_path = os.path.join(celeb_dir, file)
+        cv2.imwrite(original_path, img_normalized)
         
+        # Save augmented images with appropriate file names
+        file_identifier = file.split(".")[0]
+        partial_path = os.path.join(celeb_dir, file_identifier)
+        
+            # Cycle through all the augmented images and create the respective files
+        for i, image in enumerate(imgs_augmented):
+            path = partial_path + f"_{i}.jpg"
+            cv2.imwrite(path, image)
+            
+
+def dataAugment(image):
+    """
+    Apply data augmentation to an image by rotating it at angles of 90, 180, and 270 degrees.
+
+    Args:
+        image (numpy.ndarray): Input image to be augmented.
+
+    Returns:
+        list: A list containing the rotated images.
+    """
+    # Define rotation angles
+    angles = [90, 180, 270]
     
+    # Initialize list to store rotated images
+    rotated_images = []
+    
+    # Rotate the image at each angle and append to the list
+    for angle in angles:
+        rotated_image = imutils.rotate(image, angle)
+        rotated_images.append(rotated_image)
+    
+    # Return the list of rotated images
+    return rotated_images
 
 
 def main():
+    """
+    Main function to orchestrate image processing tasks.
+
+    Returns:
+        int: Status code indicating the success or failure of the script.
+             0: Script executed successfully.
+             1: Image path from log file not found in any directory. Check log file.
+             Other: Error occurred during script execution.
+    """
+    # Initialize status and flags based on command-line arguments
     status = 1
-    log = "--log" in sys.argv # Check for "--log" flag
-    verbose = "--verbose" in sys.argv # Check for "--verbose" flag
+    log = "--log" in sys.argv  # Check for "--log" flag
+    verbose = "--verbose" in sys.argv  # Check for "--verbose" flag
     bak = "--bak" in sys.argv
+    
+    # Flags used
     print(f"Log: {log}")
     print(f"Verbose: {verbose}")
     print(f"BAK: {bak}")
-    
+
+    # Set up path for image processing
     path = "img"
+
+    # Create a backup folder if requested
     if bak:
-        shutil.copytree(path, path+"_BAK", copy_function=shutil.copy) # Create a backup folder
-    
-    if not os.path.exists(path): # Check if there is an "img" folder
+        shutil.copytree(path, path + "_BAK", copy_function=shutil.copy)
+
+    # Check if the "img" folder exists
+    if not os.path.exists(path):
         print(f"Folder {path} not found")
         sys.exit(1)
 
+    # Get a list of image files in the folder
     files = [f for f in os.listdir(path)]
+
     if files:
+        # Print the number of celebrities found and process each image
         print(f"Celebrities found: {len(files)}")
         for img_name in files:
             print(f"\t{img_name}")
             file_name = os.path.join(path, img_name)
-            # status, log = processImages(file_name, log)
-            status = 0 ## DEBUG REMOVE
+            # Process the image
+            status, log = processImages(file_name, log)
             if not status:
                 status = renameImages(file_name)
-                resizeAndNormalize(file_name, verbose)
-                #### Preprocesessing
+                resizeNormalizeAugment(file_name, verbose)
+                renameImages(file_name)
     else:
+        # Handle case when no celebrities are found
         print(f"No celebrities found in the folder {path}.")
         sys.exit(1)
-    
+
+    # Clean up backup folder if not used and successful
     if not status and bak:
-        print("Backup not used.\nDELETING....")
-        # shutil.rmtree(path+"_BAK")
-        
+        while True:
+            remove_bak = input("Do you want to remove the backup folder? [Y/n]: ").strip().lower()
+            if remove_bak in ["y", "yes"]:
+                shutil.rmtree(path + "_BAK")
+                print("Backup folder deleted successfully.")
+                break
+            elif remove_bak in ["n", "no"]:
+                print(f"Backup folder saved as: {path}_BAK")
+                break
+            else:
+                print("Invalid input. Please enter 'Y' or 'N' to confirm your choice.")
+
     return status
         
 if __name__ == "__main__":
@@ -235,6 +303,7 @@ if __name__ == "__main__":
         print("Script executed with no errors")
     elif status == 1:
         raise IndexError(f"Image path from log file not found in any directory. Check log file")
-        # print(f"Status Error {status}")
+    else:
+        print(f"Exit code {status}")
         
     
